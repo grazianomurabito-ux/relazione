@@ -118,6 +118,7 @@
   <div class="card hidden" id="card-scelte">
     <h2>3 · Valutazione clinica</h2>
     <div id="contesto" class="sm" style="background:var(--panel2);border-radius:9px;padding:10px;margin-bottom:13px;color:var(--dim)"></div>
+    <div id="testi-vg" style="margin-bottom:15px"></div>
     <div id="scelte"></div>
     <div class="grid3" style="margin-top:6px">
       <label class="fld"><span class="lab">Peso (kg)</span><input id="peso" inputmode="decimal"></label>
@@ -688,40 +689,43 @@ function syncLdd(){
 }
 
 // ---------- step 5: testi ----------
-function buildTesti(){
-  const box=$("#testi"); box.innerHTML="";
-  for(const [key,titolo] of UI.TESTI){
-    const wrap=el("div","",""); wrap.style.marginBottom="16px";
-    wrap.appendChild(el("div","lab",titolo)).style.cssText="font-size:12.5px;color:var(--dim);margin-bottom:5px";
-    const ta=el("textarea"); ta.placeholder="Appunti telegrafici…"; ta.dataset.key=key;
-    wrap.appendChild(ta);
-    const row=el("div","row"); row.style.marginTop="7px";
-    const bGen=el("button","btn ghost sm","Genera prompt anonimo");
-    const bResp=el("button","btn ghost sm hidden","Incolla risposta");
-    bResp.style.borderColor="var(--ok)"; bResp.style.color="var(--ok)";
-    row.appendChild(bGen); row.appendChild(bResp); wrap.appendChild(row);
-    const pbox=el("div","promptbox hidden"); wrap.appendChild(pbox);
-    const warn=el("div","warn hidden"); wrap.appendChild(warn);
-    const out=el("textarea","hidden"); out.placeholder="Testo finale per il documento"; out.dataset.out=key;
-    out.style.marginTop="7px"; wrap.appendChild(out);
+function buildUnTesto(box,key,titolo){
+  const wrap=el("div","",""); wrap.style.marginBottom="16px";
+  wrap.appendChild(el("div","lab",titolo)).style.cssText="font-size:12.5px;color:var(--dim);margin-bottom:5px";
+  const ta=el("textarea"); ta.placeholder="Appunti telegrafici…"; ta.dataset.key=key;
+  wrap.appendChild(ta);
+  const row=el("div","row"); row.style.marginTop="7px";
+  const bGen=el("button","btn ghost sm","Genera prompt anonimo");
+  const bResp=el("button","btn ghost sm hidden","Incolla risposta");
+  bResp.style.borderColor="var(--ok)"; bResp.style.color="var(--ok)";
+  row.appendChild(bGen); row.appendChild(bResp); wrap.appendChild(row);
+  const pbox=el("div","promptbox hidden"); wrap.appendChild(pbox);
+  const warn=el("div","warn hidden"); wrap.appendChild(warn);
+  const out=el("textarea","hidden"); out.placeholder="Testo finale per il documento"; out.dataset.out=key;
+  out.style.marginTop="7px"; wrap.appendChild(out);
 
-    bGen.addEventListener("click",async ()=>{
-      const appunti=ta.value.trim(); if(!appunti){toast("Scrivi prima gli appunti");return;}
-      const r=JSON.parse(PIPE.get("prompt_json")(titolo,JSON.stringify(state.scelte),appunti,JSON.stringify(state.anag)));
-      pbox.textContent=r.prompt; pbox.classList.remove("hidden");
-      if(r.fuga&&r.fuga.length){warn.textContent="⚠ Negli appunti compaiono dati riferibili al paziente: "+r.fuga.join(", ")+". Rivedili prima di inviare.";warn.classList.remove("hidden");}
-      else warn.classList.add("hidden");
-      try{await navigator.clipboard.writeText(r.prompt);toast("Prompt copiato — incollalo nell'app Claude");}catch(e){toast("Prompt pronto (copia manuale)");}
-      bResp.classList.remove("hidden"); out.classList.remove("hidden"); out.value=appunti;
-      state.testi[key]=appunti;
-    });
-    bResp.addEventListener("click",async ()=>{
-      try{const t=await navigator.clipboard.readText();if(t){out.value=t.trim();state.testi[key]=t.trim();toast("Risposta incollata");}}
-      catch(e){toast("Incolla manualmente nel campo sotto");}
-    });
-    out.addEventListener("input",()=>state.testi[key]=out.value);
-    ta.addEventListener("input",()=>{if(!out.classList.contains("hidden"))return;state.testi[key]=ta.value;});
-  }
+  bGen.addEventListener("click",async ()=>{
+    const appunti=ta.value.trim(); if(!appunti){toast("Scrivi prima gli appunti");return;}
+    const r=JSON.parse(PIPE.get("prompt_json")(titolo,JSON.stringify(state.scelte),appunti,JSON.stringify(state.anag)));
+    pbox.textContent=r.prompt; pbox.classList.remove("hidden");
+    if(r.fuga&&r.fuga.length){warn.textContent="⚠ Negli appunti compaiono dati riferibili al paziente: "+r.fuga.join(", ")+". Rivedili prima di inviare.";warn.classList.remove("hidden");}
+    else warn.classList.add("hidden");
+    try{await navigator.clipboard.writeText(r.prompt);toast("Prompt copiato — incollalo nell'app Claude");}catch(e){toast("Prompt pronto (copia manuale)");}
+    bResp.classList.remove("hidden"); out.classList.remove("hidden"); out.value=appunti;
+    state.testi[key]=appunti;
+  });
+  bResp.addEventListener("click",async ()=>{
+    try{const t=await navigator.clipboard.readText();if(t){out.value=t.trim();state.testi[key]=t.trim();toast("Risposta incollata");}}
+    catch(e){toast("Incolla manualmente nel campo sotto");}
+  });
+  out.addEventListener("input",()=>state.testi[key]=out.value);
+  ta.addEventListener("input",()=>{state.testi[key]=out.classList.contains("hidden")?ta.value:out.value;});
+  box.appendChild(wrap);
+}
+function buildTesti(){
+  const vg=$("#testi-vg"); vg.innerHTML="";
+  const box=$("#testi"); box.innerHTML="";
+  UI.TESTI.forEach(([key,titolo],i)=>buildUnTesto(i===0?vg:box,key,titolo));
 }
 
 // ---------- step 6: genera ----------
