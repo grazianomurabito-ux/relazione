@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1620">
+<link rel="manifest" href="./manifest.json">
+<title>Relazione UVM</title>
+<style>
+  :root{
+    --bg:#0f1620; --panel:#162230; --panel2:#1b2a3a; --line:#26384b; --ink:#e8eef5;
+    --dim:#8aa0b5; --ok:#3ddc84; --ko:#ff6b6b; --wait:#f5b942; --accent:#5ab0ff;
+    --mono:ui-monospace,"SFMono-Regular","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  .wrap{max-width:680px;margin:0 auto;padding:14px 14px calc(40px + env(safe-area-inset-bottom));
+    padding-top:calc(12px + env(safe-area-inset-top))}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  header h1{font-size:16px;font-weight:650;margin:0;letter-spacing:-.01em}
+  .gear{background:none;border:1px solid var(--line);color:var(--dim);width:38px;height:38px;
+    border-radius:10px;font-size:18px;cursor:pointer;display:grid;place-items:center}
+  button{font-family:inherit}
+  .btn{appearance:none;border:1px solid var(--accent);background:var(--accent);color:#04111f;
+    font-weight:650;font-size:15px;padding:13px 16px;border-radius:11px;width:100%;cursor:pointer}
+  .btn:disabled{opacity:.4}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn.sm{padding:9px 13px;font-size:14px;width:auto}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px}
+  .card h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--dim);margin:0 0 12px}
+  label.fld{display:block;margin-bottom:10px}
+  label.fld .lab{font-size:12.5px;color:var(--dim);margin-bottom:4px;display:block}
+  input,select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:10px 11px;font-size:15px;font-family:inherit}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:64px;line-height:1.45}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%238aa0b5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .warn{color:var(--wait);font-size:12.5px;margin-top:3px;font-family:var(--mono)}
+  .hidden{display:none!important}
+  .center{text-align:center}
+  .dim{color:var(--dim)} .sm{font-size:13px}
+  /* boot overlay */
+  #boot{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;padding:24px;z-index:50;text-align:center}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);
+    border-radius:50%;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #boot .step{font-size:13px;color:var(--dim);font-family:var(--mono);min-height:18px}
+  .bigfile{border:1.5px dashed var(--line);border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer}
+  .bigfile.has{border-style:solid;border-color:var(--ok)}
+  .pill{display:inline-block;font-size:11px;font-family:var(--mono);padding:2px 7px;border-radius:20px;
+    background:#22303f;color:var(--dim);margin-left:6px}
+  .ldrow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;background:var(--panel2);
+    border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:8px}
+  .ldrow select,.ldrow input{width:auto;flex:1;min-width:80px;padding:7px 9px;font-size:13.5px}
+  .x{background:none;border:none;color:var(--ko);font-size:20px;cursor:pointer;padding:0 4px}
+  .promptbox{background:#0c1118;border:1px solid var(--line);border-radius:9px;padding:11px;
+    font-family:var(--mono);font-size:12px;white-space:pre-wrap;word-break:break-word;color:var(--dim);max-height:180px;overflow:auto}
+  .row{display:flex;gap:8px;align-items:center}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));
+    background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:11px 16px;border-radius:10px;
+    font-size:13.5px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%}
+  .toast.show{opacity:1}
+  .step-ok{color:var(--ok)} .step-ko{color:var(--ko)}
+  details.acc{border:1px solid var(--line);border-radius:10px;margin-bottom:9px;overflow:hidden}
+  details.acc>summary{padding:12px 14px;cursor:pointer;font-weight:550;font-size:14px;list-style:none;
+    display:flex;justify-content:space-between;align-items:center;background:var(--panel2)}
+  details.acc>summary::-webkit-details-marker{display:none}
+  details.acc>summary::after{content:"▾";color:var(--dim)}
+  details.acc[open]>summary::after{content:"▴"}
+  details.acc .inner{padding:13px}
+  .sheet{position:fixed;inset:0;background:rgba(8,12,18,.7);z-index:70;display:none}
+  .sheet.show{display:block}
+  .sheet .panel{position:absolute;bottom:0;left:0;right:0;background:var(--panel);
+    border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));
+    max-height:88vh;overflow:auto;border-top:1px solid var(--line)}
+  .sheet h2{margin-top:0}
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="spin"></div>
+  <div><b>Preparazione dell'app</b></div>
+  <div class="step" id="bootstep">avvio del runtime…</div>
+  <div class="sm dim" id="bootnote" style="max-width:300px">Il primo avvio scarica il motore Python (serve rete una volta sola). Dopo, l'app funziona offline.</div>
+</div>
+
+<div class="wrap hidden" id="app">
+  <header>
+    <h1>Relazione Infermieristica UVM</h1>
+    <button class="gear" id="gear" title="Impostazioni">⚙</button>
+  </header>
+
+  <!-- STEP 0: carica PAI -->
+  <div class="card" id="card-upload">
+    <h2>1 · Carica il PAI</h2>
+    <div class="bigfile" id="drop">
+      <div id="dropmsg"><b>Tocca per scegliere il PDF</b><div class="sm dim" style="margin-top:4px">del paziente (nativo digitale)</div></div>
+      <input type="file" id="pdf" accept="application/pdf" class="hidden">
+    </div>
+    <div id="diagbox" class="hidden" style="margin-top:11px">
+      <div class="sm dim" id="diagline"></div>
+    </div>
+  </div>
+
+  <!-- STEP 1: anagrafica -->
+  <div class="card hidden" id="card-anag">
+    <h2>2 · Anagrafica estratta — verifica e correggi</h2>
+    <div id="anagfields"></div>
+  </div>
+
+  <!-- STEP 2: scelte cliniche -->
+  <div class="card hidden" id="card-scelte">
+    <h2>3 · Valutazione clinica</h2>
+    <div id="contesto" class="sm" style="background:var(--panel2);border-radius:9px;padding:10px;margin-bottom:13px;color:var(--dim)"></div>
+    <div id="scelte"></div>
+    <div class="grid3" style="margin-top:6px">
+      <label class="fld"><span class="lab">Peso (kg)</span><input id="peso" inputmode="decimal"></label>
+      <label class="fld"><span class="lab">Altezza (cm)</span><input id="altezza" inputmode="decimal"></label>
+      <label class="fld"><span class="lab">IMC</span><input id="imc" readonly></label>
+    </div>
+  </div>
+
+  <!-- STEP 3: lesioni -->
+  <div class="card hidden" id="card-ldd">
+    <h2>4 · Lesioni da decubito</h2>
+    <div id="ldlist"></div>
+    <button class="btn ghost sm" id="addld" style="width:100%">+ Aggiungi lesione</button>
+  </div>
+
+  <!-- STEP 4: testi -->
+  <div class="card hidden" id="card-testi">
+    <h2>5 · Testi descrittivi</h2>
+    <div class="sm dim" style="margin-bottom:12px">Scrivi appunti telegrafici. Genera il prompt anonimo, incollalo nell'app Claude, riporta qui la risposta. Nessun dato identificativo lascia il dispositivo.</div>
+    <div id="testi"></div>
+  </div>
+
+  <!-- STEP 5: genera -->
+  <div class="card hidden" id="card-final">
+    <h2>6 · Genera la relazione</h2>
+    <div class="grid2" style="margin-bottom:11px">
+      <label class="fld"><span class="lab">Data</span><input id="data" placeholder="gg/mm/aaaa"></label>
+      <label class="fld"><span class="lab">Telefono operatore</span><input id="teloper" inputmode="tel"></label>
+    </div>
+    <button class="btn" id="genera">Genera e scarica il Word</button>
+    <div id="dlbox" class="center hidden" style="margin-top:13px"></div>
+    <div class="sm dim center" style="margin-top:11px">Rileggi l'intero documento prima di firmarlo.</div>
+  </div>
+</div>
+
+<!-- impostazioni -->
+<div class="sheet" id="settings">
+  <div class="panel">
+    <h2>Impostazioni</h2>
+    <p class="sm dim">Template e profilo di estrazione sono incorporati e pronti all'uso. Sostituiscili solo se il modulo della relazione o il formato del PAI cambiano.</p>
+
+    <details class="acc">
+      <summary>Template del documento <span class="pill" id="tpl-state">di fabbrica</span></summary>
+      <div class="inner">
+        <p class="sm dim">Carica un <code>.docx</code> con i tag <code>{{ ... }}</code> per sostituire il modello.</p>
+        <input type="file" id="tplfile" accept=".docx" class="hidden">
+        <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('tplfile').click()">Carica nuovo template</button>
+        <button class="btn ghost sm" id="tplreset" style="width:100%;margin-top:8px;border-color:var(--line);color:var(--dim)">Ripristina quello di fabbrica</button>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Profilo di estrazione <span class="pill" id="prof-state">di fabbrica</span></summary>
+      <div class="inner">
+        <p class="sm dim">Carica un <code>.yaml</code> con le regole delle ancore. Viene validato prima di essere accettato.</p>
+        <input type="file" id="proffile" accept=".yaml,.yml" class="hidden">
+        <button class="btn ghost sm" style="width:100%" onclick="document.getElementById('proffile').click()">Carica nuovo profilo</button>
+        <button class="btn ghost sm" id="profreset" style="width:100%;margin-top:8px;border-color:var(--line);color:var(--dim)">Ripristina quello di fabbrica</button>
+        <div class="warn hidden" id="proferr"></div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>Diagnostica estrazione</summary>
+      <div class="inner">
+        <p class="sm dim">Esegue il parser sull'ultimo PAI caricato e mostra gli esiti tecnici (nessun dato del paziente). Utile per tarare il profilo.</p>
+        <button class="btn ghost sm" id="rundiag" style="width:100%">Mostra rapporto</button>
+        <div class="promptbox hidden" id="diagout" style="margin-top:10px"></div>
+      </div>
+    </details>
+
+    <button class="btn" id="closeset" style="margin-top:8px">Chiudi</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+const UI = {"FIELDS": {"autonomia": {"label": "Autonomia", "opts": ["autonomo", "parzialmente_indipendente", "totalmente_dipendente"]}, "mobilita": {"label": "Mobilità", "opts": ["si_sposta_da_solo", "si_sposta_assistito", "non_si_sposta"]}, "disturbi_cognitivi": {"label": "Disturbi cognitivi", "opts": ["assenti_lievi", "moderati", "gravi"]}, "disturbi_sensori": {"label": "Stato di coscienza", "opts": ["integro", "obnubilato", "soporoso", "coma_vegetativo"]}, "condizioni_cliniche_generali": {"label": "Condizioni cliniche generali", "opts": ["scadenti", "in_peggioramento", "stabili"]}, "deambulazione": {"label": "Deambulazione", "opts": ["autonoma", "parzialmente_autonoma", "allettato"]}, "decubito": {"label": "Decubito", "opts": ["indifferente", "laterale", "ortopnoico"]}, "stato_nutrizionale": {"label": "Stato nutrizionale", "opts": ["regolare", "obesita", "magrezza", "cachessia"]}, "alimentazione": {"label": "Alimentazione/accessi", "opts": ["os", "sng", "peg", "picc", "midline", "cvc"]}, "astenia": {"label": "Astenia", "opts": ["presente", "assente", "lieve", "severa"]}, "dispnea_a_riposo": {"label": "Dispnea a riposo", "opts": ["presente", "assente", "lieve", "severa"]}, "edemi_alle_caviglie": {"label": "Edemi alle caviglie", "opts": ["presente", "assente"]}, "addome": {"label": "Addome", "opts": ["globoso", "piano", "incavato", "ascitico"]}, "alvo": {"label": "Alvo", "opts": ["regolare", "stipsi"]}, "diuresi": {"label": "Diuresi", "opts": ["regolare", "oliguira", "anuria"]}, "cateterismo_vescicale": {"label": "Cateterismo vescicale", "opts": ["assente", "presente", "condom", "cateterismo_intermittente"]}, "dolore": {"label": "Dolore", "opts": ["assente", "presente"]}, "tracheostomia": {"label": "Tracheostomia", "opts": ["assente", "presente"]}, "enterostomia": {"label": "Enterostomia", "opts": ["assente", "presente"]}}, "MULTI": ["alimentazione"], "SEDI": [["gluteo_dx", "Gluteo dx"], ["gluteo_sx", "Gluteo sx"], ["sacro", "Sacro-coccigeo"], ["troc_dx", "Trocanterica dx"], ["troc_sx", "Trocanterica sx"], ["tallone_dx", "Tallone dx"], ["tallone_sx", "Tallone sx"], ["malleolo_dx", "Malleolare dx"], ["malleolo_sx", "Malleolare sx"], ["altro", "Altro"]], "COLS": ["s1", "s2", "s3", "s4", "ess_scarsa", "ess_media", "ess_abbondante", "nec_si", "nec_no"], "RIGHE_ANAG": [["uvm", "UVM di"], ["nome", "Nome"], ["cognome", "Cognome"], ["sesso", "Sesso (M/F)"], ["cf", "Codice fiscale"], ["nato_gg", "Nascita: giorno"], ["nato_mm", "Nascita: mese"], ["nato_aaaa", "Nascita: anno"], ["nato_a", "Nato a"], ["residente_a", "Residente a"], ["residente_via", "  in via"], ["domiciliato_a", "Domiciliato a"], ["domiciliato_via", "  in via"], ["telefono", "Telefono"], ["cellulare", "Cellulare"], ["caregiver", "Caregiver di riferimento"], ["caregiver_tel", "  telefono"], ["caregiver_cell", "  cell"], ["mmg", "MMG"], ["mmg_tel", "  telefono"], ["mmg_cell", "  cell"]], "TESTI": [["valutazione_generale", "Valutazione delle condizioni generali del paziente"], ["socio_partecipazione", "Partecipazione dei familiari all'assistenza"], ["socio_caregiver", "Competenze e adeguatezza del caregiver"], ["socio_ambiente", "Condizioni ambientali e adeguatezza igienica"], ["consigli", "Consigli assistenziali e prescrizioni presidi"]]};
+const PIPELINE_SRC = `import re
+CFRE = r"[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]"
+
+def _norm_txt(s):
+    return re.sub(r"\\s+", "", s or "").lower()
+
+class _PaginaMiner:
+    """Parole con coordinate via pdfminer.six, convertite in origine alto-sinistra."""
+    def __init__(self, lt_page):
+        from pdfminer.layout import LTTextContainer, LTTextLine, LTChar
+        H = lt_page.bbox[3]
+        parole = []
+        def linee(el):
+            for o in el:
+                if isinstance(o, LTTextLine):
+                    yield o
+                elif isinstance(o, LTTextContainer):
+                    yield from linee(o)
+        for line in linee(lt_page):
+            buf, x0, x1, y0, y1 = "", 0, 0, 0, 0
+            def chiudi():
+                nonlocal buf
+                if buf.strip():
+                    parole.append({"t": buf, "x0": x0, "x1": x1,
+                                   "top": H - y1, "bot": H - y0})
+                buf = ""
+            for ch in line:
+                if isinstance(ch, LTChar) and not ch.get_text().isspace():
+                    if not buf:
+                        x0, x1, y0, y1 = ch.x0, ch.x1, ch.y0, ch.y1
+                    else:
+                        x1 = max(x1, ch.x1); y0 = min(y0, ch.y0); y1 = max(y1, ch.y1)
+                    buf += ch.get_text()
+                else:
+                    chiudi()
+            chiudi()
+        parole.sort(key=lambda w: ((w["top"] + w["bot"]) / 2, w["x0"]))
+        self.righe = []
+        for w in parole:
+            c = (w["top"] + w["bot"]) / 2
+            if self.righe and abs(c - self.righe[-1]["c"]) <= 3:
+                r = self.righe[-1]; r["w"].append(w)
+                r["c"] = (r["c"] * r["n"] + c) / (r["n"] + 1); r["n"] += 1
+            else:
+                self.righe.append({"c": c, "n": 1, "w": [w]})
+        for r in self.righe:
+            r["w"].sort(key=lambda w: w["x0"])
+        self.x_max_pag = lt_page.bbox[2] - 15
+        self._testo = "\\n".join(" ".join(w["t"] for w in r["w"]) for r in self.righe)
+    def testo(self):
+        return self._testo
+    def _trova(self, riga, testo):
+        mappa, pezzi = [], []
+        for i, w in enumerate(riga["w"]):
+            n = _norm_txt(w["t"])
+            pezzi.append(n)
+            mappa.extend([i] * len(n))
+        pos = "".join(pezzi).find(_norm_txt(testo))
+        if pos < 0 or not mappa:
+            return None
+        fine = pos + len(_norm_txt(testo)) - 1
+        return riga["w"][mappa[pos]]["x0"], riga["w"][mappa[fine]]["x1"]
+    def finestra(self, ancora, delimitatore, tol):
+        for r in self.righe:
+            hit = self._trova(r, ancora)
+            if not hit:
+                continue
+            x_max = self.x_max_pag
+            if delimitatore:
+                d = self._trova(r, delimitatore)
+                if d:
+                    x_max = d[0]
+            par = [w["t"] for w in r["w"] if w["x0"] > hit[1] and w["x1"] <= x_max + 1]
+            return " ".join(par).strip(), r["w"][0]["top"]
+        return None, None
+
+def sesso_da_cf(cf):
+    try:
+        return "F" if int(cf[9:11]) > 40 else "M"
+    except (ValueError, IndexError):
+        return ""
+
+def post_cf_e_nome(txt, out, diag):
+    m = re.search(CFRE, txt)
+    if m:
+        out["cf"] = m.group(0)
+        out["sesso"] = sesso_da_cf(m.group(0))
+        resto = (txt[:m.start()] + txt[m.end():]).strip(" -–")
+    else:
+        diag.append(("cf", "PATTERN_FALLITO"))
+        resto = txt
+    tok = resto.split()
+    if tok:                                   # convenzione COGNOME ... NOME
+        out["nome"], out["cognome"] = tok[-1].title(), " ".join(tok[:-1]).title()
+    diag.append(("nominativo", f"OK len={len(resto)}" if tok else "VUOTO"))
+
+def post_data_e_luogo(txt, out, diag):
+    m = re.search(r"(\\d{1,2})[-/](\\d{1,2})[-/](\\d{2,4})\\s+a\\s+(.+)", txt)
+    if m:
+        out["nato_gg"], out["nato_mm"], out["nato_aaaa"] = m.group(1, 2, 3)
+        out["nato_a"] = m.group(4).strip().title()
+        diag.append(("nascita", "OK"))
+    else:
+        diag.append(("nascita", "PATTERN_FALLITO" if txt else "VUOTO"))
+
+def post_indirizzo(txt, out, diag, prefisso):
+    txt = txt.strip()
+    via, citta = "", ""
+    m = re.match(r"(.*?)\\s*(\\d{5})\\s+(.+)$", txt)
+    if m:
+        via, citta = m.group(1).strip(), m.group(3).strip().title()
+    elif txt:
+        citta = txt.strip("- ").title()
+    via = re.sub(r"^-+\\s*", "", via)
+    via = re.sub(r"^[Vv]ia\\s+", "", via)          # il modulo ha già "In via"
+    out[prefisso + "_a"], out[prefisso + "_via"] = citta, via
+    diag.append((prefisso, "OK" if citta or via else "VUOTO"))
+
+def estrai_numeri(txt):
+    """Numeri di telefono: fonde gruppi di cifre fino a 11, oltre spezza."""
+    out = []
+    for m in re.finditer(r"\\d+(?:[ .\\-/]\\d+)*", txt):
+        cur = ""
+        for run in re.findall(r"\\d+", m.group(0)):
+            if cur and len(cur) + len(run) > 11:
+                if len(cur) >= 6:
+                    out.append(cur)
+                cur = run
+            else:
+                cur += run
+        if len(cur) >= 6:
+            out.append(cur)
+    return out
+
+def post_telefoni(txt, out, diag, k_fisso="telefono", k_cell="cellulare"):
+    numeri = estrai_numeri(txt)
+    for n in numeri:
+        k = k_cell if n.startswith("3") else k_fisso
+        if out.get(k):
+            k = k_fisso if k == k_cell else k_cell
+        if not out.get(k):
+            out[k] = n
+    diag.append(("telefoni", f"OK n={len(numeri)}" if numeri else "VUOTO"))
+
+def post_persona_telefono(txt, out, diag):
+    numeri = estrai_numeri(txt)
+    tel = numeri[-1] if numeri else ""
+    nome = re.sub(r"[\\d .\\-/]+$", "", txt).strip()
+    out["mmg"] = nome
+    if tel:
+        out["mmg_cell" if tel.startswith("3") else "mmg_tel"] = tel
+    diag.append(("mmg", "OK" if nome or tel else "VUOTO"))
+
+def cf_warnings(d):
+    cf = (d.get("cf") or "").upper().replace(" ", "")
+    if not cf:
+        return ["CF non estratto"]
+    if not re.fullmatch(CFRE, cf):
+        return ["CF non conforme al formato"]
+    msgs, mesi = [], "ABCDEHLMPRST"
+    try:
+        dd = int(cf[9:11]); giorno = dd - 40 if dd > 40 else dd
+        if d.get("nato_gg") and int(d["nato_gg"]) != giorno:
+            msgs.append("CF incoerente col giorno di nascita")
+        if d.get("nato_mm") and int(d["nato_mm"]) != mesi.index(cf[8]) + 1:
+            msgs.append("CF incoerente col mese di nascita")
+        if d.get("nato_aaaa") and d["nato_aaaa"][-2:] != cf[6:8]:
+            msgs.append("CF incoerente con l'anno di nascita")
+    except (ValueError, IndexError):
+        msgs.append("CF non interpretabile")
+    return msgs
+
+def token_sensibili(anag):
+    stop = {"via", "dott", "dott."}
+    toks = set()
+    for v in anag.values():
+        for t in re.findall(r"[A-Za-zÀ-ù]{4,}", str(v or "")):
+            if t.lower() not in stop:
+                toks.add(t.lower())
+    return toks
+
+def controlla_appunti(testo, sensibili):
+    fuga = sorted({t for t in re.findall(r"[A-Za-zÀ-ù]{4,}", testo)
+                   if t.lower() in sensibili})
+    if re.search(r"\\d{1,2}[/\\-.]\\d{1,2}[/\\-.]\\d{2,4}", testo):
+        fuga.append("(una data completa)")
+    return fuga
+
+RIGHE_ANAG = [
+    ("uvm", "UVM di"), ("nome", "Nome"), ("cognome", "Cognome"),
+    ("sesso", "Sesso (M/F)"), ("cf", "Codice fiscale"),
+    ("nato_gg", "Nascita: giorno"), ("nato_mm", "Nascita: mese"),
+    ("nato_aaaa", "Nascita: anno"), ("nato_a", "Nato a"),
+    ("residente_a", "Residente a"), ("residente_via", "  in via"),
+    ("domiciliato_a", "Domiciliato a"), ("domiciliato_via", "  in via"),
+    ("telefono", "Telefono"), ("cellulare", "Cellulare"),
+    ("caregiver", "Caregiver di riferimento"), ("caregiver_tel", "  telefono"),
+    ("caregiver_cell", "  cell"), ("mmg", "MMG"),
+    ("mmg_tel", "  telefono"), ("mmg_cell", "  cell"),
+]
+
+FIELDS = {
+    "autonomia": ("Autonomia", ["autonomo", "parzialmente_indipendente", "totalmente_dipendente"]),
+    "mobilita": ("Mobilità", ["si_sposta_da_solo", "si_sposta_assistito", "non_si_sposta"]),
+    "disturbi_cognitivi": ("Disturbi cognitivi", ["assenti_lievi", "moderati", "gravi"]),
+    "disturbi_sensori": ("Stato di coscienza", ["integro", "obnubilato", "soporoso", "coma_vegetativo"]),
+    "condizioni_cliniche_generali": ("Condizioni cliniche generali", ["scadenti", "in_peggioramento", "stabili"]),
+    "deambulazione": ("Deambulazione", ["autonoma", "parzialmente_autonoma", "allettato"]),
+    "decubito": ("Decubito", ["indifferente", "laterale", "ortopnoico"]),
+    "stato_nutrizionale": ("Stato nutrizionale", ["regolare", "obesita", "magrezza", "cachessia"]),
+    "alimentazione": ("Alimentazione/accessi", ["os", "sng", "peg", "picc", "midline", "cvc"]),
+    "astenia": ("Astenia", ["presente", "assente", "lieve", "severa"]),
+    "dispnea_a_riposo": ("Dispnea a riposo", ["presente", "assente", "lieve", "severa"]),
+    "edemi_alle_caviglie": ("Edemi alle caviglie", ["presente", "assente"]),
+    "addome": ("Addome", ["globoso", "piano", "incavato", "ascitico"]),
+    "alvo": ("Alvo", ["regolare", "stipsi"]),
+    "diuresi": ("Diuresi", ["regolare", "oliguira", "anuria"]),
+    "cateterismo_vescicale": ("Cateterismo vescicale", ["assente", "presente", "condom", "cateterismo_intermittente"]),
+    "dolore": ("Dolore", ["assente", "presente"]),
+    "tracheostomia": ("Tracheostomia", ["assente", "presente"]),
+    "enterostomia": ("Enterostomia", ["assente", "presente"]),
+}
+
+MULTI = {"alimentazione"}
+
+SEDI = [("gluteo_dx", "Gluteo dx"), ("gluteo_sx", "Gluteo sx"), ("sacro", "Sacro-coccigeo"),
+        ("troc_dx", "Trocanterica dx"), ("troc_sx", "Trocanterica sx"),
+        ("tallone_dx", "Tallone dx"), ("tallone_sx", "Tallone sx"),
+        ("malleolo_dx", "Malleolare dx"), ("malleolo_sx", "Malleolare sx"), ("altro", "Altro")]
+
+COLS = ["s1", "s2", "s3", "s4", "ess_scarsa", "ess_media", "ess_abbondante", "nec_si", "nec_no"]
+
+TEMPLATE_PROMPT = """Scrivi in linguaggio infermieristico professionale il campo "{campo}" \\
+di una relazione UVM: 2-4 frasi, terza persona, tono asciutto, SOLO le informazioni fornite, \\
+senza aggiungere dettagli clinici non indicati. Rispondi unicamente col testo.
+Quadro (categorie del modulo): {categorie}.
+Appunti dell'operatore: {appunti}"""
+
+import io
+def carica_pagine(pdf_bytes):
+    from pdfminer.high_level import extract_pages
+    from pdfminer.layout import LAParams
+    return [_PaginaMiner(p) for p in extract_pages(io.BytesIO(pdf_bytes), laparams=LAParams())]
+
+
+import yaml as _yaml
+def estrai(pdf_bytes, profilo_yaml):
+    profilo = _yaml.safe_load(profilo_yaml)
+    pagine = carica_pagine(pdf_bytes)
+    tol = profilo.get("tolleranza_y", 3)
+    out, diag, contesto = dict(profilo.get("costanti", {})), [], []
+    for nome_campo, cfg in profilo["campi"].items():
+        idx = cfg.get("pagina", 1) - 1
+        txt, y = (None, None) if idx >= len(pagine) else \\
+            pagine[idx].finestra(cfg["ancora"], cfg.get("delimitatore"), tol)
+        if txt is None:
+            diag.append((nome_campo, "ANCORA_MANCANTE")); continue
+        diag.append((nome_campo, f"ancora pag.{cfg.get('pagina',1)} y={y:.0f} parole_len={len(txt)}"))
+        tipo = cfg["tipo"]
+        if tipo == "cf_e_nome": post_cf_e_nome(txt, out, diag)
+        elif tipo == "data_e_luogo": post_data_e_luogo(txt, out, diag)
+        elif tipo == "indirizzo":
+            post_indirizzo(txt, out, diag, "residente" if nome_campo == "residenza" else "domiciliato")
+        elif tipo == "telefoni": post_telefoni(txt, out, diag)
+        elif tipo == "persona_telefono": post_persona_telefono(txt, out, diag)
+        elif tipo == "testo": contesto.append(txt)
+    peg = any("PEG" in p.testo() for p in pagine)
+    return out, diag, contesto, peg
+
+
+from docxtpl import DocxTemplate, Listing
+def render_bytes(anag, scelte, ldd, testi, extra, template_bytes):
+    ck = {f"{f}_{o}": "☐" for f, (_, opts) in FIELDS.items() for o in opts}
+    for f, v in scelte.items():
+        for o in (v if isinstance(v, list) else [v]):
+            if f"{f}_{o}" in ck: ck[f"{f}_{o}"] = "☒"
+    any_ldd = any(x == "X" for s in ldd.values() for x in s.values())
+    ck["ldd_si"], ck["ldd_no"] = ("☒", "☐") if any_ldd else ("☐", "☒")
+    ctx = {k: (anag.get(k) or "") for k, _ in RIGHE_ANAG}
+    ctx["cf"] = ((anag.get("cf") or "").upper().replace(" ", "") + " " * 16)[:16]
+    ctx.update(ck=ck, ldd=ldd, **extra)
+    ctx.setdefault("dolore_sede", "_" * 40)
+    ctx.setdefault("ldd_altro_sede", "")
+    for k, v in testi.items():
+        ctx[k] = Listing(v)
+    tpl = DocxTemplate(io.BytesIO(template_bytes))
+    tpl.render(ctx)
+    out = io.BytesIO(); tpl.save(out); return out.getvalue()
+
+
+import json
+def estrai_json(pdf_bytes, profilo_yaml):
+    """Per JS: ritorna JSON con anagrafica, diagnostica, contesto, flag PEG, avvisi CF."""
+    anag, diag, contesto, peg = estrai(bytes(pdf_bytes), profilo_yaml)
+    return json.dumps({"anag": anag, "diag": diag, "contesto": contesto,
+                       "peg": peg, "cf_warn": cf_warnings(anag)})
+
+def prompt_json(campo, scelte_json, appunti, anag_json):
+    """Per JS: costruisce il prompt de-identificato + lista token sensibili negli appunti."""
+    scelte = json.loads(scelte_json); anag = json.loads(anag_json)
+    categorie = "; ".join(
+        f"{FIELDS[f][0]}: {', '.join(v) if isinstance(v, list) else v}".replace("_", " ")
+        for f, v in scelte.items()) or "—"
+    prompt = TEMPLATE_PROMPT.format(campo=campo, categorie=categorie, appunti=appunti)
+    fuga = controlla_appunti(appunti, token_sensibili(anag))
+    return json.dumps({"prompt": prompt, "fuga": fuga})
+
+def render_b64(anag_json, scelte_json, ldd_json, testi_json, extra_json, template_bytes):
+    """Per JS: rende il docx e lo ritorna in base64."""
+    import base64
+    data = render_bytes(json.loads(anag_json), json.loads(scelte_json), json.loads(ldd_json),
+                        json.loads(testi_json), json.loads(extra_json), bytes(template_bytes))
+    return base64.b64encode(data).decode()
+`;
+const PYV = "0.27.4";
+const CDN = `https://cdn.jsdelivr.net/pyodide/v${PYV}/full/`;
+const DB = "relazione-uvm";
+
+// ---------- mini storage (IndexedDB) per override template/profilo ----------
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function kvGet(k){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("kv").objectStore("kv").get(k);t.onsuccess=()=>res(t.result??null);t.onerror=()=>rej(t.error);});}
+async function kvSet(k,v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("kv","readwrite").objectStore("kv").put(v,k);t.onsuccess=()=>res();t.onerror=()=>rej(t.error);});}
+async function kvDel(k){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction("kv","readwrite").objectStore("kv").delete(k);t.onsuccess=()=>res();t.onerror=()=>rej(t.error);});}
+
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2200);}
+
+let py=null, PIPE=null, templateBytes=null, profileText=null, lastPdfBytes=null;
+const state={anag:{},scelte:{},ldd:{},testi:{}};
+
+// ---------- boot ----------
+async function boot(){
+  const step=$("#bootstep");
+  try{
+    step.textContent="scarico il runtime Python…";
+    const {loadPyodide}=await import(CDN+"pyodide.mjs");
+    py=await loadPyodide({indexURL:CDN});
+    step.textContent="carico le librerie di base…";
+    await py.loadPackage(["lxml","pyyaml","micropip"]);
+    step.textContent="installo docxtpl e pdfminer…";
+    await py.runPythonAsync(`import micropip
+await micropip.install(["docxtpl","python-docx","jinja2","pdfminer.six"])`);
+    step.textContent="carico la pipeline…";
+    py.runPython(PIPELINE_SRC);
+    PIPE=py.globals;
+    // template + profilo: override se presenti, altrimenti di fabbrica
+    await caricaTemplateProfilo();
+    $("#boot").classList.add("hidden");
+    $("#app").classList.remove("hidden");
+    registraSW();
+  }catch(e){
+    step.innerHTML=`<span class="step-ko">Errore di avvio</span>`;
+    $("#bootnote").textContent=String(e).slice(0,200);
+  }
+}
+
+async function caricaTemplateProfilo(){
+  const tOv=await kvGet("template"), pOv=await kvGet("profilo");
+  if(tOv){templateBytes=new Uint8Array(tOv);$("#tpl-state").textContent="personalizzato";}
+  else{templateBytes=new Uint8Array(await (await fetch("./template_relazione.docx")).arrayBuffer());}
+  if(pOv){profileText=pOv;$("#prof-state").textContent="personalizzato";}
+  else{profileText=await (await fetch("./profilo_pai.yaml")).text();}
+}
+
+function registraSW(){
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+}
+
+// ---------- step 1: PAI ----------
+$("#drop").addEventListener("click",()=>$("#pdf").click());
+$("#pdf").addEventListener("change",async ev=>{
+  const f=ev.target.files[0]; if(!f)return;
+  lastPdfBytes=new Uint8Array(await f.arrayBuffer());
+  $("#dropmsg").innerHTML=`<b>${f.name}</b><div class="sm dim" style="margin-top:4px">elaborazione…</div>`;
+  $("#drop").classList.add("has");
+  try{
+    const res=JSON.parse(PIPE.get("estrai_json")(py.toPy(lastPdfBytes),profileText));
+    state.anag=res.anag||{};
+    const ok=res.diag.filter(d=>d[1].startsWith("ancora")).length;
+    $("#dropmsg").innerHTML=`<b>${f.name}</b><div class="sm dim" style="margin-top:4px">${ok} campi agganciati · PEG ${res.peg?"sì":"no"}</div>`;
+    renderAnag(res.cf_warn, res.peg, res.contesto);
+    document.querySelectorAll(".card").forEach(c=>{if(c.id!=="card-upload")c.classList.remove("hidden");});
+    buildScelte(); buildTesti(); $("#data").value=oggi();
+    $("#card-anag").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    $("#dropmsg").innerHTML=`<b class="step-ko">Lettura fallita</b><div class="sm dim">${String(e).slice(0,90)}</div>`;
+  }
+});
+
+// ---------- step 2: anagrafica ----------
+function renderAnag(warn, peg, contesto){
+  const box=$("#anagfields"); box.innerHTML="";
+  for(const [k,lab] of UI.RIGHE_ANAG){
+    const l=el("label","fld");
+    l.appendChild(el("span","lab",lab.trim()));
+    const i=el("input"); i.value=state.anag[k]||""; i.dataset.k=k;
+    i.addEventListener("input",()=>{state.anag[k]=i.value;});
+    l.appendChild(i); box.appendChild(l);
+  }
+  if(warn&&warn.length){const w=el("div","warn","⚠ "+warn.join(" · "));box.appendChild(w);}
+  const ctx=[]; if(contesto&&contesto.length)ctx.push(...contesto);
+  if(peg)ctx.push("Nel PAI compare «PEG»: ricordalo per Alimentazione e Stato nutrizionale.");
+  $("#contesto").textContent=ctx.join("  •  ")||"Nessuna nota dal PAI.";
+}
+
+// ---------- step 3: scelte ----------
+function buildScelte(){
+  const box=$("#scelte"); box.innerHTML="";
+  for(const [f,cfg] of Object.entries(UI.FIELDS)){
+    const multi=UI.MULTI.includes(f);
+    const l=el("label","fld");
+    l.appendChild(el("span","lab",cfg.label+(multi?" (più scelte)":"")));
+    if(multi){
+      const wrap=el("div","",""); wrap.style.display="flex";wrap.style.flexWrap="wrap";wrap.style.gap="6px";
+      cfg.opts.forEach(o=>{
+        const b=el("button","btn ghost sm",o.replace(/_/g," "));
+        b.type="button";b.style.borderColor="var(--line)";b.style.color="var(--dim)";
+        b.addEventListener("click",()=>{
+          state.scelte[f]=state.scelte[f]||[];
+          const i=state.scelte[f].indexOf(o);
+          if(i<0){state.scelte[f].push(o);b.style.borderColor="var(--accent)";b.style.color="var(--accent)";}
+          else{state.scelte[f].splice(i,1);b.style.borderColor="var(--line)";b.style.color="var(--dim)";if(!state.scelte[f].length)delete state.scelte[f];}
+        });
+        wrap.appendChild(b);
+      });
+      l.appendChild(wrap);
+    }else{
+      const s=el("select");
+      s.appendChild(new Option("— non indicato —",""));
+      cfg.opts.forEach(o=>s.appendChild(new Option(o.replace(/_/g," "),o)));
+      s.addEventListener("change",()=>{
+        if(s.value)state.scelte[f]=s.value; else delete state.scelte[f];
+        if(f==="dolore")toggleSede(s.value==="presente");
+      });
+      l.appendChild(s);
+    }
+    box.appendChild(l);
+  }
+  // campo sede dolore (nascosto)
+  const sede=el("label","fld hidden"); sede.id="sedewrap";
+  sede.appendChild(el("span","lab","Sede del dolore"));
+  const si=el("input"); si.id="dolsede"; si.addEventListener("input",()=>state.scelte._dolore_sede=si.value);
+  sede.appendChild(si); box.appendChild(sede);
+}
+function toggleSede(on){$("#sedewrap").classList.toggle("hidden",!on);}
+
+// IMC
+function calcImc(){
+  const kg=parseFloat(($("#peso").value||"").replace(",",".")); let cm=parseFloat(($("#altezza").value||"").replace(",","."));
+  if(cm&&cm<3){cm*=100;$("#altezza").value=String(cm);}
+  if(kg&&cm){const v=kg/Math.pow(cm/100,2);$("#imc").value=v.toFixed(1);
+    if(v<10||v>70)toast("IMC fuori range: controlla peso e altezza");}
+  else $("#imc").value="";
+}
+$("#peso").addEventListener("input",calcImc); $("#altezza").addEventListener("input",calcImc);
+
+// ---------- step 4: lesioni ----------
+$("#addld").addEventListener("click",()=>addLd());
+function addLd(){
+  const row=el("div","ldrow");
+  const sede=el("select"); UI.SEDI.forEach(([k,lab])=>sede.appendChild(new Option(lab,k)));
+  const stadio=el("select"); ["—","1","2","3","4"].forEach(s=>stadio.appendChild(new Option(s==="—"?"stadio":s,s==="—"?"":s)));
+  const ess=el("select"); [["","essud."],["scarsa","scarsa"],["media","media"],["abbondante","abbond."]].forEach(([v,t])=>ess.appendChild(new Option(t,v)));
+  const nec=el("select"); [["","necrosi?"],["si","necrosi sì"],["no","necrosi no"]].forEach(([v,t])=>nec.appendChild(new Option(t,v)));
+  const altro=el("input"); altro.placeholder="sede (se «altro»)"; altro.classList.add("hidden");
+  sede.addEventListener("change",()=>altro.classList.toggle("hidden",sede.value!=="altro"));
+  const x=el("button","x","×"); x.addEventListener("click",()=>{row.remove();syncLdd();});
+  [sede,stadio,ess,nec,altro,x].forEach(e=>row.appendChild(e));
+  row._get=()=>({sede:sede.value,stadio:stadio.value,ess:ess.value,nec:nec.value,altro:altro.value});
+  [sede,stadio,ess,nec,altro].forEach(e=>e.addEventListener("change",syncLdd));
+  altro.addEventListener("input",syncLdd);
+  $("#ldlist").appendChild(row);
+}
+function syncLdd(){
+  const ldd={}; UI.SEDI.forEach(([k])=>ldd[k]=Object.fromEntries(UI.COLS.map(c=>[c,""])));
+  let altroSede="";
+  $("#ldlist").querySelectorAll(".ldrow").forEach(r=>{
+    const v=r._get(); const s=v.sede; if(!s)return;
+    if(v.stadio)ldd[s]["s"+v.stadio]="X";
+    if(v.ess)ldd[s]["ess_"+v.ess]="X";
+    if(v.nec)ldd[s]["nec_"+v.nec]="X";
+    if(s==="altro"&&v.altro)altroSede=v.altro;
+  });
+  state.ldd=ldd; state._ldd_altro=altroSede;
+}
+
+// ---------- step 5: testi ----------
+function buildTesti(){
+  const box=$("#testi"); box.innerHTML="";
+  for(const [key,titolo] of UI.TESTI){
+    const wrap=el("div","",""); wrap.style.marginBottom="16px";
+    wrap.appendChild(el("div","lab",titolo)).style.cssText="font-size:12.5px;color:var(--dim);margin-bottom:5px";
+    const ta=el("textarea"); ta.placeholder="Appunti telegrafici…"; ta.dataset.key=key;
+    wrap.appendChild(ta);
+    const row=el("div","row"); row.style.marginTop="7px";
+    const bGen=el("button","btn ghost sm","Genera prompt anonimo");
+    const bResp=el("button","btn ghost sm hidden","Incolla risposta");
+    bResp.style.borderColor="var(--ok)"; bResp.style.color="var(--ok)";
+    row.appendChild(bGen); row.appendChild(bResp); wrap.appendChild(row);
+    const pbox=el("div","promptbox hidden"); wrap.appendChild(pbox);
+    const warn=el("div","warn hidden"); wrap.appendChild(warn);
+    const out=el("textarea","hidden"); out.placeholder="Testo finale per il documento"; out.dataset.out=key;
+    out.style.marginTop="7px"; wrap.appendChild(out);
+
+    bGen.addEventListener("click",async ()=>{
+      const appunti=ta.value.trim(); if(!appunti){toast("Scrivi prima gli appunti");return;}
+      const r=JSON.parse(PIPE.get("prompt_json")(titolo,JSON.stringify(state.scelte),appunti,JSON.stringify(state.anag)));
+      pbox.textContent=r.prompt; pbox.classList.remove("hidden");
+      if(r.fuga&&r.fuga.length){warn.textContent="⚠ Negli appunti compaiono dati riferibili al paziente: "+r.fuga.join(", ")+". Rivedili prima di inviare.";warn.classList.remove("hidden");}
+      else warn.classList.add("hidden");
+      try{await navigator.clipboard.writeText(r.prompt);toast("Prompt copiato — incollalo nell'app Claude");}catch(e){toast("Prompt pronto (copia manuale)");}
+      bResp.classList.remove("hidden"); out.classList.remove("hidden"); out.value=appunti;
+      state.testi[key]=appunti;
+    });
+    bResp.addEventListener("click",async ()=>{
+      try{const t=await navigator.clipboard.readText();if(t){out.value=t.trim();state.testi[key]=t.trim();toast("Risposta incollata");}}
+      catch(e){toast("Incolla manualmente nel campo sotto");}
+    });
+    out.addEventListener("input",()=>state.testi[key]=out.value);
+    ta.addEventListener("input",()=>{if(!out.classList.contains("hidden"))return;state.testi[key]=ta.value;});
+  }
+}
+
+// ---------- step 6: genera ----------
+$("#genera").addEventListener("click",async ()=>{
+  syncLdd(); calcImc();
+  const extra={
+    data:$("#data").value.trim()||oggi(),
+    telefono_operatore:$("#teloper").value.trim()||("_____/"+"_".repeat(21)),
+    peso:$("#peso").value.trim(),altezza:$("#altezza").value.trim(),imc:$("#imc").value.trim(),
+    ldd_altro_sede:state._ldd_altro||""
+  };
+  if(state.scelte._dolore_sede)extra.dolore_sede=state.scelte._dolore_sede;
+  const scelte={...state.scelte}; delete scelte._dolore_sede;
+  const testiFull={}; UI.TESTI.forEach(([k])=>testiFull[k]=state.testi[k]||"");
+  try{
+    $("#genera").disabled=true; $("#genera").textContent="generazione…";
+    const b64=PIPE.get("render_b64")(JSON.stringify(state.anag),JSON.stringify(scelte),
+      JSON.stringify(state.ldd),JSON.stringify(testiFull),JSON.stringify(extra),py.toPy(templateBytes));
+    const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    const blob=new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    const nome=`relazione_${(state.anag.cognome||"paziente").toLowerCase().replace(/\s+/g,"_")}_${oggi().replace(/\//g,"")}.docx`;
+    const url=URL.createObjectURL(blob);
+    $("#dlbox").innerHTML=`<a class="btn" href="${url}" download="${nome}">Scarica ${nome}</a>`;
+    $("#dlbox").classList.remove("hidden");
+    $("#dlbox").scrollIntoView({behavior:"smooth"});
+    toast("Documento generato");
+  }catch(e){toast("Errore: "+String(e).slice(0,80));}
+  finally{$("#genera").disabled=false;$("#genera").textContent="Genera e scarica il Word";}
+});
+
+function oggi(){const d=new Date();return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
+
+// ---------- impostazioni ----------
+$("#gear").addEventListener("click",()=>$("#settings").classList.add("show"));
+$("#closeset").addEventListener("click",()=>$("#settings").classList.remove("show"));
+$("#settings").addEventListener("click",e=>{if(e.target.id==="settings")$("#settings").classList.remove("show");});
+
+$("#tplfile").addEventListener("change",async ev=>{
+  const f=ev.target.files[0]; if(!f)return;
+  const buf=await f.arrayBuffer();
+  // validazione minima: deve contenere tag {{ }} e aprire come zip docx
+  try{
+    const t=new TextDecoder().decode(new Uint8Array(buf).slice(0,4));
+    if(t.slice(0,2)!=="PK")throw new Error("non è un .docx");
+    await kvSet("template",buf); templateBytes=new Uint8Array(buf);
+    $("#tpl-state").textContent="personalizzato"; toast("Template aggiornato");
+  }catch(e){toast("File non valido: "+String(e).slice(0,60));}
+});
+$("#tplreset").addEventListener("click",async ()=>{
+  await kvDel("template"); templateBytes=new Uint8Array(await (await fetch("./template_relazione.docx")).arrayBuffer());
+  $("#tpl-state").textContent="di fabbrica"; toast("Template di fabbrica ripristinato");
+});
+
+$("#proffile").addEventListener("change",async ev=>{
+  const f=ev.target.files[0]; if(!f)return;
+  const txt=await f.text(); $("#proferr").classList.add("hidden");
+  try{
+    // valido il YAML eseguendo il parser su un caricamento fittizio
+    const okMsg=py.runPython(`
+import yaml,json
+try:
+    p=yaml.safe_load(${JSON.stringify(txt)})
+    assert isinstance(p,dict) and "campi" in p, "manca la sezione 'campi'"
+    for n,c in p["campi"].items():
+        assert "ancora" in c and "tipo" in c, f"campo {n}: manca ancora o tipo"
+    json.dumps("ok")
+except Exception as e:
+    json.dumps("ERR: "+str(e))
+`);
+    const r=JSON.parse(okMsg);
+    if(r.startsWith("ERR")){throw new Error(r.slice(5));}
+    await kvSet("profilo",txt); profileText=txt;
+    $("#prof-state").textContent="personalizzato"; toast("Profilo aggiornato");
+  }catch(e){$("#proferr").textContent="Profilo non valido: "+String(e).slice(0,80);$("#proferr").classList.remove("hidden");}
+});
+$("#profreset").addEventListener("click",async ()=>{
+  await kvDel("profilo"); profileText=await (await fetch("./profilo_pai.yaml")).text();
+  $("#prof-state").textContent="di fabbrica"; toast("Profilo di fabbrica ripristinato");
+});
+
+$("#rundiag").addEventListener("click",()=>{
+  if(!lastPdfBytes){toast("Carica prima un PAI");return;}
+  const res=JSON.parse(PIPE.get("estrai_json")(py.toPy(lastPdfBytes),profileText));
+  const lines=res.diag.map(([n,e])=>`${n.padEnd(14)} ${e}`).join("\n")+
+    (res.cf_warn.length?"\ncoerenza_cf  "+res.cf_warn.join("; "):"");
+  $("#diagout").textContent=lines; $("#diagout").classList.remove("hidden");
+});
+
+boot();
+</script>
+</body>
+</html>

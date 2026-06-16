@@ -1,0 +1,45 @@
+# Profilo di estrazione — PAI ASP Catania (UVM)
+# Le regole sono dati: se il gestionale cambia layout si ritocca questo file,
+# non il programma. Le ancore sono i testi fissi stampati dal gestionale.
+
+tolleranza_y: 3        # punti: gioco verticale della finestra rispetto all'ancora
+
+costanti:
+  uvm: "Catania"       # dal frontespizio "UVM Catania"
+
+campi:
+  assistito:
+    pagina: 1
+    ancora: "Assistito/a"
+    delimitatore: "URGENTE:"      # ancora della colonna destra: chiude la finestra
+    tipo: cf_e_nome               # "CF - COGNOME NOME"; sesso derivato dal CF
+  nato:
+    pagina: 1
+    ancora: "Nato/a il"
+    delimitatore: "Valutazione:"
+    tipo: data_e_luogo            # "gg-mm-aaaa  a  LUOGO"
+  residenza:
+    pagina: 1
+    ancora: "Residenza:"
+    delimitatore: "Tipologia ADI:"
+    tipo: indirizzo               # "via ... CAP CITTÀ"
+  domicilio:
+    pagina: 1
+    ancora: "Domicilio:"
+    delimitatore: "Case Manager:"
+    tipo: indirizzo               # "-----" = via assente
+  telefoni:
+    pagina: 1
+    ancora: "Telefoni:"
+    delimitatore: "MMG:"
+    tipo: telefoni                # prefisso 3xx = cellulare, altrimenti fisso
+  mmg:
+    pagina: 1
+    ancora: "MMG:"
+    delimitatore: null            # fino al margine destro della pagina
+    tipo: persona_telefono        # "Dott. COGNOME NOME  342..."
+  descrizione:
+    pagina: 2
+    ancora: "Descr. bio-psico-sociale:"
+    delimitatore: null
+    tipo: testo                   # solo contesto a video: resta in locale
