@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1620">
 <link rel="manifest" href="./manifest.json">
-<title>Relazione</title>
+<title>Relazione UVM</title>
 <style>
   :root{
     --bg:#0f1620; --panel:#162230; --panel2:#1b2a3a; --line:#26384b; --ink:#e8eef5;
@@ -196,34 +196,8 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-const UI = {
-  "FIELDS": {
-    "autonomia": ["Autonomia", ["autonomo", "parzialmente_indipendente", "totalmente_dipendente"]],
-    "mobilita": ["Mobilità", ["si_sposta_da_solo", "si_sposta_assistito", "non_si_sposta"]],
-    "disturbi_cognitivi": ["Disturbi cognitivi", ["assenti_lievi", "moderati", "gravi"]],
-    "disturbi_sensori": ["Stato di coscienza", ["integro", "obnubilato", "soporoso", "coma_vegetativo"]],
-    "condizioni_cliniche_generali": ["Condizioni cliniche generali", ["scadenti", "in_peggioramento", "stabili"]],
-    "deambulazione": ["Deambulazione", ["autonoma", "parzialmente_autonoma", "allettato"]],
-    "decubito": ["Decubito", ["indifferente", "laterale", "ortopnoico"]],
-    "stato_nutrizionale": ["Stato nutrizionale", ["regolare", "obesita", "magrezza", "cachessia"]],
-    "alimentazione": ["Alimentazione/accessi", ["os", "sng", "peg", "picc", "midline", "cvc"]],
-    "astenia": ["Astenia", ["presente", "assente", "lieve", "severa"]],
-    "dispnea_a_riposo": ["Dispnea a riposo", ["presente", "assente", "lieve", "severa"]],
-    "edemi_alle_caviglie": ["Edemi alle caviglie", ["presente", "assente"]],
-    "addome": ["Addome", ["globoso", "piano", "incavato", "ascitico"]],
-    "alvo": ["Alvo", ["regolare", "stipsi"]],
-    "diuresi": ["Diuresi", ["regolare", "oliguira", "anuria"]],
-    "cateterismo_vescicale": ["Cateterismo vescicale", ["assente", "presente", "condom", "cateterismo_intermittente"]],
-    "dolore": ["Dolore", ["assente", "presente"]],
-    "tracheostomia": ["Tracheostomia", ["assente", "presente"]],
-    "enterostomia": ["Enterostomia", ["assente", "presente"]]
-  },
-  "MULTI": ["alimentazione"],
-  "SEDI": [["gluteo_dx", "Gluteo dx"], ["gluteo_sx", "Gluteo sx"], ["sacro", "Sacro-coccigeo"], ["troc_dx", "Trocanterica dx"], ["troc_sx", "Trocanterica sx"], ["tallone_dx", "Tallone dx"], ["tallone_sx", "Tallone sx"], ["malleolo_dx", "Malleolare dx"], ["malleolo_sx", "Malleolare sx"], ["altro", "Altro"]],
-  "COLS": ["s1", "s2", "s3", "s4", "ess_scarsa", "ess_media", "ess_abbondante", "nec_si", "nec_no"],
-  "RIGHE_ANAG": [["uvm", "UVM di"], ["nome", "Nome"], ["cognome", "Cognome"], ["sesso", "Sesso (M/F)"], ["cf", "Codice fiscale"], ["nato_gg", "Nascita: giorno"], ["nato_mm", "Nascita: mese"], ["nato_aaaa", "Nascita: anno"], ["nato_a", "Nato a"], ["residente_a", "Residente a"], ["residente_via", "  in via"], ["domiciliato_a", "Domiciliato a"], ["domiciliato_via", "  in via"], ["telefono", "Telefono"], ["cellulare", "Cellulare"], ["caregiver", "Caregiver di riferimento"], ["caregiver_tel", "  telefono"], ["caregiver_cell", "  cell"], ["mmg", "MMG"], ["mmg_tel", "  telefono"], ["mmg_cell", "  cell"]],
-  "TESTI": [["valutazione_generale", "Valutazione delle condizioni generali del paziente"], ["socio_partecipazione", "Partecipazione dei familiari all'assistenza"], ["socio_caregiver", "Competenze e adeguatezza del caregiver"], ["socio_ambiente", "Condizioni ambientali e adeguatezza igienica"], ["consigli", "Consigli assistenziali e prescrizioni presidi"]]
-};const PIPELINE_SRC = `import re
+const UI = {"FIELDS": {"autonomia": {"label": "Autonomia", "opts": ["autonomo", "parzialmente_indipendente", "totalmente_dipendente"]}, "mobilita": {"label": "Mobilità", "opts": ["si_sposta_da_solo", "si_sposta_assistito", "non_si_sposta"]}, "disturbi_cognitivi": {"label": "Disturbi cognitivi", "opts": ["assenti_lievi", "moderati", "gravi"]}, "disturbi_sensori": {"label": "Stato di coscienza", "opts": ["integro", "obnubilato", "soporoso", "coma_vegetativo"]}, "condizioni_cliniche_generali": {"label": "Condizioni cliniche generali", "opts": ["scadenti", "in_peggioramento", "stabili"]}, "deambulazione": {"label": "Deambulazione", "opts": ["autonoma", "parzialmente_autonoma", "allettato"]}, "decubito": {"label": "Decubito", "opts": ["indifferente", "laterale", "ortopnoico"]}, "stato_nutrizionale": {"label": "Stato nutrizionale", "opts": ["regolare", "obesita", "magrezza", "cachessia"]}, "alimentazione": {"label": "Alimentazione/accessi", "opts": ["os", "sng", "peg", "picc", "midline", "cvc"]}, "astenia": {"label": "Astenia", "opts": ["presente", "assente", "lieve", "severa"]}, "dispnea_a_riposo": {"label": "Dispnea a riposo", "opts": ["presente", "assente", "lieve", "severa"]}, "edemi_alle_caviglie": {"label": "Edemi alle caviglie", "opts": ["presente", "assente"]}, "addome": {"label": "Addome", "opts": ["globoso", "piano", "incavato", "ascitico"]}, "alvo": {"label": "Alvo", "opts": ["regolare", "stipsi"]}, "diuresi": {"label": "Diuresi", "opts": ["regolare", "oliguira", "anuria"]}, "cateterismo_vescicale": {"label": "Cateterismo vescicale", "opts": ["assente", "presente", "condom", "cateterismo_intermittente"]}, "dolore": {"label": "Dolore", "opts": ["assente", "presente"]}, "tracheostomia": {"label": "Tracheostomia", "opts": ["assente", "presente"]}, "enterostomia": {"label": "Enterostomia", "opts": ["assente", "presente"]}}, "MULTI": ["alimentazione"], "SEDI": [["gluteo_dx", "Gluteo dx"], ["gluteo_sx", "Gluteo sx"], ["sacro", "Sacro-coccigeo"], ["troc_dx", "Trocanterica dx"], ["troc_sx", "Trocanterica sx"], ["tallone_dx", "Tallone dx"], ["tallone_sx", "Tallone sx"], ["malleolo_dx", "Malleolare dx"], ["malleolo_sx", "Malleolare sx"], ["altro", "Altro"]], "COLS": ["s1", "s2", "s3", "s4", "ess_scarsa", "ess_media", "ess_abbondante", "nec_si", "nec_no"], "RIGHE_ANAG": [["uvm", "UVM di"], ["nome", "Nome"], ["cognome", "Cognome"], ["sesso", "Sesso (M/F)"], ["cf", "Codice fiscale"], ["nato_gg", "Nascita: giorno"], ["nato_mm", "Nascita: mese"], ["nato_aaaa", "Nascita: anno"], ["nato_a", "Nato a"], ["residente_a", "Residente a"], ["residente_via", "  in via"], ["domiciliato_a", "Domiciliato a"], ["domiciliato_via", "  in via"], ["telefono", "Telefono"], ["cellulare", "Cellulare"], ["caregiver", "Caregiver di riferimento"], ["caregiver_tel", "  telefono"], ["caregiver_cell", "  cell"], ["mmg", "MMG"], ["mmg_tel", "  telefono"], ["mmg_cell", "  cell"]], "TESTI": [["valutazione_generale", "Valutazione delle condizioni generali del paziente"], ["socio_partecipazione", "Partecipazione dei familiari all'assistenza"], ["socio_caregiver", "Competenze e adeguatezza del caregiver"], ["socio_ambiente", "Condizioni ambientali e adeguatezza igienica"], ["consigli", "Consigli assistenziali e prescrizioni presidi"]]};
+const PIPELINE_SRC = `import re
 CFRE = r"[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]"
 
 def _norm_txt(s):
@@ -633,17 +607,15 @@ function renderAnag(warn, peg, contesto){
 }
 
 // ---------- step 3: scelte ----------
-// ---------- step 3: scelte ----------
 function buildScelte(){
   const box=$("#scelte"); box.innerHTML="";
-  for(const [f, [label, opts]] of Object.entries(UI.FIELDS)){
+  for(const [f,cfg] of Object.entries(UI.FIELDS)){
     const multi=UI.MULTI.includes(f);
     const l=el("label","fld");
-    l.appendChild(el("span","lab",label+(multi?" (più scelte)":"")));
-    
+    l.appendChild(el("span","lab",cfg.label+(multi?" (più scelte)":"")));
     if(multi){
       const wrap=el("div","",""); wrap.style.display="flex";wrap.style.flexWrap="wrap";wrap.style.gap="6px";
-      opts.forEach(o=>{
+      cfg.opts.forEach(o=>{
         const b=el("button","btn ghost sm",o.replace(/_/g," "));
         b.type="button";b.style.borderColor="var(--line)";b.style.color="var(--dim)";
         b.addEventListener("click",()=>{
@@ -658,7 +630,7 @@ function buildScelte(){
     }else{
       const s=el("select");
       s.appendChild(new Option("— non indicato —",""));
-      opts.forEach(o=>s.appendChild(new Option(o.replace(/_/g," "),o)));
+      cfg.opts.forEach(o=>s.appendChild(new Option(o.replace(/_/g," "),o)));
       s.addEventListener("change",()=>{
         if(s.value)state.scelte[f]=s.value; else delete state.scelte[f];
         if(f==="dolore")toggleSede(s.value==="presente");
@@ -716,53 +688,37 @@ function syncLdd(){
 }
 
 // ---------- step 5: testi ----------
-// ---------- step 5: testi ----------
 function buildTesti(){
   const box=$("#testi"); box.innerHTML="";
   for(const [key,titolo] of UI.TESTI){
-    const wrap=el("div","",""); wrap.style.drop_shadow="margin-bottom:16px";
+    const wrap=el("div","",""); wrap.style.marginBottom="16px";
     wrap.appendChild(el("div","lab",titolo)).style.cssText="font-size:12.5px;color:var(--dim);margin-bottom:5px";
-    
-    // Casella per gli appunti (utile se si usa il Prompt)
-    const ta=el("textarea"); ta.placeholder="Appunti telegrafici per il prompt AI…"; ta.dataset.key=key;
+    const ta=el("textarea"); ta.placeholder="Appunti telegrafici…"; ta.dataset.key=key;
     wrap.appendChild(ta);
-    
     const row=el("div","row"); row.style.marginTop="7px";
     const bGen=el("button","btn ghost sm","Genera prompt anonimo");
     const bResp=el("button","btn ghost sm hidden","Incolla risposta");
     bResp.style.borderColor="var(--ok)"; bResp.style.color="var(--ok)";
     row.appendChild(bGen); row.appendChild(bResp); wrap.appendChild(row);
-    
     const pbox=el("div","promptbox hidden"); wrap.appendChild(pbox);
     const warn=el("div","warn hidden"); wrap.appendChild(warn);
-    
-    // FIX: Riscritto senza "hidden", adesso il campo finale è sempre visibile e modificabile a mano!
-    const out=el("textarea"); out.placeholder="Scrivi qui la relazione finale che andrà nel Word…"; out.dataset.out=key;
+    const out=el("textarea","hidden"); out.placeholder="Testo finale per il documento"; out.dataset.out=key;
     out.style.marginTop="7px"; wrap.appendChild(out);
 
     bGen.addEventListener("click",async ()=>{
       const appunti=ta.value.trim(); if(!appunti){toast("Scrivi prima gli appunti");return;}
-      const promptScelte = {...state.scelte};
-      delete promptScelte._dolore_sede; 
-      try {
-        const r=JSON.parse(PIPE.get("prompt_json")(titolo,JSON.stringify(promptScelte),appunti,JSON.stringify(state.anag)));
-        pbox.textContent=r.prompt; pbox.classList.remove("hidden");
-        if(r.fuga&&r.fuga.length){warn.textContent="⚠ Negli appunti compaiono dati riferibili al paziente: "+r.fuga.join(", ")+". Rivedili prima di inviare.";warn.classList.remove("hidden");}
-        else warn.classList.add("hidden");
-        try{await navigator.clipboard.writeText(r.prompt);toast("Prompt copiato — incollalo in Claude");}catch(e){toast("Prompt pronto (copia manuale)");}
-        bResp.classList.remove("hidden"); out.value=appunti;
-        state.testi[key]=appunti;
-      } catch(err) {
-        toast("Errore generazione prompt: " + String(err).slice(0, 80));
-      }
+      const r=JSON.parse(PIPE.get("prompt_json")(titolo,JSON.stringify(state.scelte),appunti,JSON.stringify(state.anag)));
+      pbox.textContent=r.prompt; pbox.classList.remove("hidden");
+      if(r.fuga&&r.fuga.length){warn.textContent="⚠ Negli appunti compaiono dati riferibili al paziente: "+r.fuga.join(", ")+". Rivedili prima di inviare.";warn.classList.remove("hidden");}
+      else warn.classList.add("hidden");
+      try{await navigator.clipboard.writeText(r.prompt);toast("Prompt copiato — incollalo nell'app Claude");}catch(e){toast("Prompt pronto (copia manuale)");}
+      bResp.classList.remove("hidden"); out.classList.remove("hidden"); out.value=appunti;
+      state.testi[key]=appunti;
     });
-    
     bResp.addEventListener("click",async ()=>{
       try{const t=await navigator.clipboard.readText();if(t){out.value=t.trim();state.testi[key]=t.trim();toast("Risposta incollata");}}
       catch(e){toast("Incolla manualmente nel campo sotto");}
     });
-    
-    // Salva all'istante tutto ciò che scrivi a mano nella casella finale
     out.addEventListener("input",()=>state.testi[key]=out.value);
     ta.addEventListener("input",()=>{if(!out.classList.contains("hidden"))return;state.testi[key]=ta.value;});
   }
@@ -792,7 +748,7 @@ $("#genera").addEventListener("click",async ()=>{
     $("#dlbox").classList.remove("hidden");
     $("#dlbox").scrollIntoView({behavior:"smooth"});
     toast("Documento generato");
-  }catch(e){ console.error(e); toast("Errore! Guarda la console"); }
+  }catch(e){toast("Errore: "+String(e).slice(0,80));}
   finally{$("#genera").disabled=false;$("#genera").textContent="Genera e scarica il Word";}
 });
 
